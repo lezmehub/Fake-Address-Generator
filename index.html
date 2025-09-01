@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Address Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/faker/6.6.6/faker.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .profile-card {
+            transition: all 0.3s ease;
+        }
+        
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .country-flag {
+            width: 24px;
+            height: 16px;
+            margin-right: 8px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fas fa-id-card text-indigo-600 text-2xl mr-3"></i>
+                <h1 class="text-2xl font-bold text-gray-800">Fake Address Generator</h1>
+            </div>
+            <nav class="flex space-x-4">
+                <button id="generatorTab" class="px-4 py-2 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 focus:outline-none">Generator</button>
+                <button id="historyTab" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none">History</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Generator Tab -->
+        <div id="generatorContent" class="tab-content active">
+            <!-- Disclaimer -->
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            This data is 100% fake and for testing or educational use only. It must not be used for illegal purposes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generator Controls -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Generate Fake Identity</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div>
+                        <label for="countrySelect" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                        <select id="countrySelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="random">Random Country</option>
+                            <option value="en_US">United States</option>
+                            <option value="en_CA">Canada</option>
+                            <option value="en_GB">United Kingdom</option>
+                            <option value="en_AU">Australia</option>
+                            <option value="de_DE">Germany</option>
+                            <option value="fr_FR">France</option>
+                            <option value="es_ES">Spain</option>
+                            <option value="it_IT">Italy</option>
+                            <option value="ja_JP">Japan</option>
+                            <option value="ko_KR">South Korea</option>
+                            <option value="zh_CN">China</option>
+                            <option value="ru_RU">Russia</option>
+                            <option value="pt_BR">Brazil</option>
+                            <option value="es_MX">Mexico</option>
+                            <option value="en_IN">India</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="countSelect" class="block text-sm font-medium text-gray-700 mb-1">Number of Profiles</label>
+                        <select id="countSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-end">
+                        <button id="generateBtn" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                            <i class="fas fa-sync-alt mr-2"></i> Generate
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generated Profiles -->
+            <div id="profilesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Profiles will be inserted here -->
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="historyContent" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800">Generated Profiles History</h2>
+                    <button id="clearHistoryBtn" class="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition">
+                        <i class="fas fa-trash-alt mr-2"></i> Clear History
+                    </button>
+                </div>
+                
+                <div id="historyContainer" class="space-y-4">
+                    <!-- History items will be inserted here -->
+                </div>
+                
+                <div id="emptyHistory" class="text-center py-12 text-gray-500">
+                    <i class="fas fa-history text-4xl mb-4"></i>
+                    <p>No history yet. Generate some profiles first!</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <p class="text-center text-gray-500 text-sm">
+                Generated by Fetus
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up tab switching
+            const generatorTab = document.getElementById('generatorTab');
+            const historyTab = document.getElementById('historyTab');
+            const generatorContent = document.getElementById('generatorContent');
+            const historyContent = document.getElementById('historyContent');
+            
+            generatorTab.addEventListener('click', () => {
+                generatorTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                generatorTab.classList.remove('text-gray-500');
+                historyTab.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                historyTab.classList.add('text-gray-500');
+                
+                generatorContent.classList.add('active');
+                historyContent.classList.remove('active');
+            });
+            
+            historyTab.addEventListener('click', () => {
+                historyTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                historyTab.classList.remove('text-gray-500');
+                generatorTab.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
+                generatorTab.classList.add('text-gray-500');
+                
+                historyContent.classList.add('active');
+                generatorContent.classList.remove('active');
+                
+                loadHistory();
+            });
+            
+            // Generate button click
+            document.getElementById('generateBtn').addEventListener('click', generateProfiles);
+            
+            // Clear history button
+            document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+            
+            // Load history on page load
+            loadHistory();
+        });
+        
+        // Function to generate fake profiles
+        function generateProfiles() {
+            const country = document.getElementById('countrySelect').value;
+            const count = parseInt(document.getElementById('countSelect').value);
+            const container = document.getElementById('profilesContainer');
+            
+            // Clear previous results
+            container.innerHTML = '';
+            
+            // Generate profiles
+            for (let i = 0; i < count; i++) {
+                const profile = generateProfile(country);
+                displayProfile(profile, container);
+                saveToHistory(profile);
+            }
+        }
+        
+        // Function to generate a single profile
+        function generateProfile(countryCode) {
+            // Set locale if not random
+            if (countryCode !== 'random') {
+                faker.locale = countryCode;
+            } else {
+                // If random, pick a random country from the list
+                const countries = ['en_US', 'en_CA', 'en_GB', 'en_AU', 'de_DE', 'fr_FR', 'es_ES', 'it_IT', 'ja_JP', 'ko_KR', 'zh_CN', 'ru_RU', 'pt_BR', 'es_MX', 'en_IN'];
+                faker.locale = countries[Math.floor(Math.random() * countries.length)];
+            }
+            
+            // Generate profile data
+            const profile = {
+                id: Date.now() + Math.random(),
+                person: {
+                    fullName: faker.name.findName(),
+                    gender: faker.name.gender(),
+                    birthday: faker.date.past(50, new Date(2000, 0, 1)).toLocaleDateString(),
+                    ssn: generateSSN()
+                },
+                address: {
+                    street: faker.address.streetAddress(),
+                    city: faker.address.city(),
+                    state: faker.address.state(),
+                    zipCode: faker.address.zipCode(),
+                    phoneNumber: faker.phone.phoneNumber(),
+                    country: faker.address.country(),
+                    latitude: faker.address.latitude(),
+                    longitude: faker.address.longitude()
+                },
+                finance: {
+                    cardBrand: faker.random.arrayElement(['Visa', 'MasterCard', 'American Express', 'Discover']),
+                    cardNumber: generateCardNumber(),
+                    expirationDate: generateExpirationDate(),
+                    cvv: faker.finance.creditCardCVV()
+                },
+                timestamp: new Date().toISOString()
+            };
+            
+            return profile;
+        }
+        
+        // Function to generate a fake SSN
+        function generateSSN() {
+            let ssn = '';
+            for (let i = 0; i < 9; i++) {
+                ssn += Math.floor(Math.random() * 10);
+                if (i === 2 || i === 4) ssn += '-';
+            }
+            return ssn;
+        }
+        
+        // Function to generate a fake credit card number
+        function generateCardNumber() {
+            let cardNumber = '';
+            const length = Math.floor(Math.random() * 3) + 16; // 16-18 digits
+            
+            for (let i = 0; i < length; i++) {
+                cardNumber += Math.floor(Math.random() * 10);
+                if (i > 0 && i % 4 === 3 && i < length - 1) cardNumber += ' ';
+            }
+            
+            return cardNumber;
+        }
+        
+        // Function to generate a fake expiration date
+        function generateExpirationDate() {
+            const month = Math.floor(Math.random() * 12) + 1;
+            const year = new Date().getFullYear() + Math.floor(Math.random() * 5) + 1;
+            return `${month.toString().padStart(2, '0')}/${year.toString().slice(-2)}`;
+        }
+        
+        // Function to display a profile
+        function displayProfile(profile, container) {
+            const profileCard = document.createElement('div');
+            profileCard.className = 'profile-card bg-white rounded-lg shadow-md overflow-hidden fade-in';
+            
+            profileCard.innerHTML = `
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">${profile.person.fullName}</h3>
+                        <button class="download-btn text-indigo-600 hover:text-indigo-800" data-profile='${JSON.stringify(profile)}'>
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Personal Information</h4>
+                            <div class="bg-gray-50 rounded-md p-3">
+                                <p class="text-sm"><span class="font-medium">Gender:</span> ${profile.person.gender}</p>
+                                <p class="text-sm"><span class="font-medium">Birthday:</span> ${profile.person.birthday}</p>
+                                <p class="text-sm"><span class="font-medium">SSN:</span> ${profile.person.ssn}</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Address</h4>
+                            <div class="bg-gray-50 rounded-md p-3">
+                                <p class="text-sm">${profile.address.street}</p>
+                                <p class="text-sm">${profile.address.city}, ${profile.address.state} ${profile.address.zipCode}</p>
+                                <p class="text-sm">${profile.address.country}</p>
+                                <p class="text-sm"><span class="font-medium">Phone:</span> ${profile.address.phoneNumber}</p>
+                                <p class="text-sm"><span class="font-medium">Coordinates:</span> ${profile.address.latitude}, ${profile.address.longitude}</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Financial Information</h4>
+                            <div class="bg-gray-50 rounded-md p-3">
+                                <p class="text-sm"><span class="font-medium">Card:</span> ${profile.finance.cardBrand}</p>
+                                <p class="text-sm">${profile.finance.cardNumber}</p>
+                                <p class="text-sm"><span class="font-medium">Expires:</span> ${profile.finance.expirationDate} | <span class="font-medium">CVV:</span> ${profile.finance.cvv}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(profileCard);
+            
+            // Add download functionality
+            profileCard.querySelector('.download-btn').addEventListener('click', function() {
+                downloadProfile(profile);
+            });
+        }
+        
+        // Function to download a profile as a text file
+        function downloadProfile(profile) {
+            const content = `
+FAKE IDENTITY PROFILE
+====================
+
+Personal Information:
+- Full Name: ${profile.person.fullName}
+- Gender: ${profile.person.gender}
+- Birthday: ${profile.person.birthday}
+- SSN: ${profile.person.ssn}
+
+Address:
+- Street: ${profile.address.street}
+- City: ${profile.address.city}
+- State: ${profile.address.state}
+- Zip Code: ${profile.address.zipCode}
+- Country: ${profile.address.country}
+- Phone: ${profile.address.phoneNumber}
+- Coordinates: ${profile.address.latitude}, ${profile.address.longitude}
+
+Financial Information:
+- Card Brand: ${profile.finance.cardBrand}
+- Card Number: ${profile.finance.cardNumber}
+- Expiration Date: ${profile.finance.expirationDate}
+- CVV: ${profile.finance.cvv}
+
+Generated by Fetus
+            `;
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fake_profile_${profile.id}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Function to save a profile to history
+        function saveToHistory(profile) {
+            let history = JSON.parse(localStorage.getItem('fakeProfileHistory') || '[]');
+            history.unshift(profile);
+            
+            // Limit history to 50 items
+            if (history.length > 50) {
+                history = history.slice(0, 50);
+            }
+            
+            localStorage.setItem('fakeProfileHistory', JSON.stringify(history));
+        }
+        
+        // Function to load and display history
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('fakeProfileHistory') || '[]');
+            const container = document.getElementById('historyContainer');
+            const emptyMessage = document.getElementById('emptyHistory');
+            
+            container.innerHTML = '';
+            
+            if (history.length === 0) {
+                emptyMessage.style.display = 'block';
+                return;
+            }
+            
+            emptyMessage.style.display = 'none';
+            
+            history.forEach(profile => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'bg-gray-50 rounded-lg p-4 flex justify-between items-center hover:bg-gray-100 transition';
+                
+                const date = new Date(profile.timestamp).toLocaleString();
+                
+                historyItem.innerHTML = `
+                    <div>
+                        <h3 class="font-medium text-gray-800">${profile.person.fullName}</h3>
+                        <p class="text-sm text-gray-600">${profile.address.city}, ${profile.address.country}</p>
+                        <p class="text-xs text-gray-500">${date}</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="view-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition" data-profile='${JSON.stringify(profile)}'>
+                            <i class="fas fa-eye mr-1"></i> View
+                        </button>
+                        <button class="download-btn px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition" data-profile='${JSON.stringify(profile)}'>
+                            <i class="fas fa-download mr-1"></i> Download
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(historyItem);
+                
+                // Add view functionality
+                historyItem.querySelector('.view-btn').addEventListener('click', function() {
+                    // Switch to generator tab and display the profile
+                    document.getElementById('generatorTab').click();
+                    const profilesContainer = document.getElementById('profilesContainer');
+                    profilesContainer.innerHTML = '';
+                    displayProfile(profile, profilesContainer);
+                });
+                
+                // Add download functionality
+                historyItem.querySelector('.download-btn').addEventListener('click', function() {
+                    downloadProfile(profile);
+                });
+            });
+        }
+        
+        // Function to clear history
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all history?')) {
+                localStorage.removeItem('fakeProfileHistory');
+                loadHistory();
+            }
+        }
+    </script>
+</body>
+</html>
