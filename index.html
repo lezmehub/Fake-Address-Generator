@@ -5,376 +5,778 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fake Address Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/faker/6.6.6/faker.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;500;600&display=swap');
+        
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --dark: #0f172a;
+            --darker: #020617;
+            --light: #f8fafc;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        .profile-card {
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--darker);
+            color: var(--light);
+            min-height: 100vh;
             transition: all 0.3s ease;
         }
         
-        .profile-card:hover {
+        body.light-mode {
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+        
+        .orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .cyber-border {
+            position: relative;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .cyber-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.4), transparent);
+            animation: cyber-scan 3s infinite;
+        }
+        
+        @keyframes cyber-scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .typing-effect {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 2s steps(30, end);
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        .glow {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        body.light-mode .card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+        
+        .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
         
-        .tab-content {
-            display: none;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            transition: all 0.3s ease;
         }
         
-        .tab-content.active {
-            display: block;
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
         }
         
-        .country-flag {
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: rgba(30, 41, 59, 0.9);
+            border-left: 4px solid var(--primary);
+            border-radius: 0.25rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        body.light-mode .toast {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .flag-icon {
             width: 24px;
-            height: 16px;
-            margin-right: 8px;
+            height: 18px;
             display: inline-block;
+            margin-right: 8px;
+            border-radius: 2px;
+            overflow: hidden;
             vertical-align: middle;
+        }
+        
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <i class="fas fa-id-card text-indigo-600 text-2xl mr-3"></i>
-                <h1 class="text-2xl font-bold text-gray-800">Fake Address Generator</h1>
+<body>
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="mb-10 text-center">
+            <h1 class="orbitron text-4xl md:text-5xl font-bold mb-2 glow-text">FAKE ADDRESS GENERATOR</h1>
+            <p class="text-gray-400 text-lg typing-effect">Create realistic but entirely fake identities for testing</p>
+            
+            <!-- Dark Mode Toggle -->
+            <div class="absolute top-4 right-4">
+                <button id="darkModeToggle" class="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
-            <nav class="flex space-x-4">
-                <button id="generatorTab" class="px-4 py-2 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 focus:outline-none">Generator</button>
-                <button id="historyTab" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none">History</button>
-            </nav>
+        </header>
+
+        <!-- Disclaimer -->
+        <div class="mb-8 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+            <p class="text-red-400 text-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                This data is 100% fake and for testing or educational use only. It must not be used for illegal purposes.
+            </p>
         </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-700 mb-8">
+            <button class="tab-btn px-6 py-3 font-medium tab-active" data-tab="generator">
+                <i class="fas fa-magic mr-2"></i> Generator
+            </button>
+            <button class="tab-btn px-6 py-3 font-medium" data-tab="history">
+                <i class="fas fa-history mr-2"></i> History
+            </button>
+        </div>
+
         <!-- Generator Tab -->
-        <div id="generatorContent" class="tab-content active">
-            <!-- Disclaimer -->
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-yellow-700">
-                            This data is 100% fake and for testing or educational use only. It must not be used for illegal purposes.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Generator Controls -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Generate Fake Identity</h2>
+        <div id="generator-tab" class="tab-content">
+            <div class="card rounded-xl p-6 mb-8 cyber-border">
+                <h2 class="text-2xl font-bold mb-6 orbitron">Generate Fake Identity</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                        <label for="countrySelect" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                        <select id="countrySelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="random">Random Country</option>
-                            <option value="en_US">United States</option>
-                            <option value="en_CA">Canada</option>
-                            <option value="en_GB">United Kingdom</option>
-                            <option value="en_AU">Australia</option>
-                            <option value="de_DE">Germany</option>
-                            <option value="fr_FR">France</option>
-                            <option value="es_ES">Spain</option>
-                            <option value="it_IT">Italy</option>
-                            <option value="ja_JP">Japan</option>
-                            <option value="ko_KR">South Korea</option>
-                            <option value="zh_CN">China</option>
-                            <option value="ru_RU">Russia</option>
-                            <option value="pt_BR">Brazil</option>
-                            <option value="es_MX">Mexico</option>
-                            <option value="en_IN">India</option>
+                        <label class="block text-gray-400 mb-2">Select Country</label>
+                        <select id="countrySelect" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="US">United States</option>
+                            <option value="UK">United Kingdom</option>
+                            <option value="CA">Canada</option>
+                            <option value="AU">Australia</option>
+                            <option value="DE">Germany</option>
+                            <option value="FR">France</option>
+                            <option value="JP">Japan</option>
+                            <option value="CN">China</option>
+                            <option value="IN">India</option>
+                            <option value="BR">Brazil</option>
                         </select>
                     </div>
                     
                     <div>
-                        <label for="countSelect" class="block text-sm font-medium text-gray-700 mb-1">Number of Profiles</label>
-                        <select id="countSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="5">5</option>
-                            <option value="10">10</option>
+                        <label class="block text-gray-400 mb-2">Number of Profiles</label>
+                        <select id="countSelect" class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="1">1 Profile</option>
+                            <option value="3">3 Profiles</option>
+                            <option value="5">5 Profiles</option>
+                            <option value="10">10 Profiles</option>
                         </select>
-                    </div>
-                    
-                    <div class="flex items-end">
-                        <button id="generateBtn" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
-                            <i class="fas fa-sync-alt mr-2"></i> Generate
-                        </button>
                     </div>
                 </div>
+                
+                <div class="flex justify-center">
+                    <button id="generateBtn" class="btn-primary px-8 py-3 rounded-lg font-medium orbitron">
+                        <i class="fas fa-sync-alt mr-2"></i> Generate
+                    </button>
+                </div>
             </div>
-
-            <!-- Generated Profiles -->
-            <div id="profilesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Profiles will be inserted here -->
+            
+            <!-- Results Container -->
+            <div id="resultsContainer" class="hidden">
+                <h2 class="text-2xl font-bold mb-6 orbitron">Generated Profiles</h2>
+                <div id="profilesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Profiles will be inserted here -->
+                </div>
             </div>
         </div>
 
         <!-- History Tab -->
-        <div id="historyContent" class="tab-content">
-            <div class="bg-white rounded-lg shadow-md p-6">
+        <div id="history-tab" class="tab-content hidden">
+            <div class="card rounded-xl p-6 cyber-border">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800">Generated Profiles History</h2>
-                    <button id="clearHistoryBtn" class="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition">
-                        <i class="fas fa-trash-alt mr-2"></i> Clear History
-                    </button>
+                    <h2 class="text-2xl font-bold orbitron">Generated History</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="searchHistory" placeholder="Search..." class="p-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button id="clearHistoryBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition">
+                            <i class="fas fa-trash mr-2"></i> Clear All
+                        </button>
+                    </div>
                 </div>
                 
-                <div id="historyContainer" class="space-y-4">
-                    <!-- History items will be inserted here -->
+                <div id="historyContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- History profiles will be inserted here -->
                 </div>
                 
                 <div id="emptyHistory" class="text-center py-12 text-gray-500">
-                    <i class="fas fa-history text-4xl mb-4"></i>
-                    <p>No history yet. Generate some profiles first!</p>
+                    <i class="fas fa-inbox text-5xl mb-4"></i>
+                    <p>No generated profiles yet. Go to the Generator tab to create some!</p>
                 </div>
             </div>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p class="text-center text-gray-500 text-sm">
-                Generated by Fetus
-            </p>
-        </div>
-    </footer>
+        <!-- Footer -->
+        <footer class="mt-12 pt-6 border-t border-gray-800 text-center text-gray-500">
+            <p>Generated by Fetus</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
 
     <script>
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up tab switching
-            const generatorTab = document.getElementById('generatorTab');
-            const historyTab = document.getElementById('historyTab');
-            const generatorContent = document.getElementById('generatorContent');
-            const historyContent = document.getElementById('historyContent');
-            
-            generatorTab.addEventListener('click', () => {
-                generatorTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
-                generatorTab.classList.remove('text-gray-500');
-                historyTab.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
-                historyTab.classList.add('text-gray-500');
-                
-                generatorContent.classList.add('active');
-                historyContent.classList.remove('active');
-            });
-            
-            historyTab.addEventListener('click', () => {
-                historyTab.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
-                historyTab.classList.remove('text-gray-500');
-                generatorTab.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
-                generatorTab.classList.add('text-gray-500');
-                
-                historyContent.classList.add('active');
-                generatorContent.classList.remove('active');
-                
-                loadHistory();
-            });
-            
-            // Generate button click
-            document.getElementById('generateBtn').addEventListener('click', generateProfiles);
-            
-            // Clear history button
-            document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
-            
-            // Load history on page load
-            loadHistory();
+        // Country data for names, addresses, etc.
+        const countryData = {
+            US: {
+                name: "United States",
+                flag: "🇺🇸",
+                firstNames: ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Christopher", "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen"],
+                lastNames: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"],
+                streetFormats: ["{number} {street} {type}", "{number} {street} {type}"],
+                streetTypes: ["St", "Ave", "Blvd", "Rd", "Ln", "Dr", "Way"],
+                streets: ["Main", "Oak", "Pine", "Maple", "Cedar", "Elm", "Park", "Washington", "Lincoln", "Jefferson"],
+                cities: ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"],
+                states: ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA"],
+                phoneFormat: "({area}) {exchange}-{line}",
+                postalCodeFormat: "#####"
+            },
+            UK: {
+                name: "United Kingdom",
+                flag: "🇬🇧",
+                firstNames: ["Oliver", "George", "Noah", "Arthur", "Harry", "Leo", "Oscar", "Charlie", "Jack", "Muhammad", "Olivia", "Amelia", "Isla", "Ava", "Emily", "Sophia", "Grace", "Mia", "Poppy", "Ella"],
+                lastNames: ["Smith", "Jones", "Taylor", "Brown", "Williams", "Wilson", "Johnson", "Davies", "Robinson", "Wright"],
+                streetFormats: ["{number} {street} {type}", "{number}, {street} {type}"],
+                streetTypes: ["Street", "Road", "Avenue", "Lane", "Close", "Drive", "Gardens", "Square"],
+                streets: ["High", "Church", "Park", "Station", "Market", "Queen", "King", "Victoria", "Albert", "George"],
+                cities: ["London", "Birmingham", "Manchester", "Glasgow", "Liverpool", "Leeds", "Sheffield", "Edinburgh", "Bristol", "Leicester"],
+                states: ["England", "Scotland", "Wales", "Northern Ireland"],
+                phoneFormat: "0{area} {exchange} {line}",
+                postalCodeFormat: "A# #AA"
+            },
+            CA: {
+                name: "Canada",
+                flag: "🇨🇦",
+                firstNames: ["Liam", "Noah", "Oliver", "Lucas", "Benjamin", "Theodore", "Charlie", "William", "Jack", "Thomas", "Olivia", "Emma", "Charlotte", "Amelia", "Sophia", "Ava", "Mia", "Isabella", "Emily", "Chloe"],
+                lastNames: ["Smith", "Brown", "Tremblay", "Martin", "Roy", "Wilson", "Macdonald", "Gagnon", "Johnson", "Taylor"],
+                streetFormats: ["{number} {street} {type}", "{number} {street} {type}"],
+                streetTypes: ["St", "Ave", "Blvd", "Rd", "Ln", "Dr", "Way", "Cres"],
+                streets: ["Main", "Oak", "Maple", "Pine", "Cedar", "Elm", "Park", "King", "Queen", "Victoria"],
+                cities: ["Toronto", "Montreal", "Vancouver", "Calgary", "Edmonton", "Ottawa", "Winnipeg", "Quebec City", "Hamilton", "Kitchener"],
+                states: ["ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "NL", "PE"],
+                phoneFormat: "({area}) {exchange}-{line}",
+                postalCodeFormat: "A#A #A#"
+            },
+            AU: {
+                name: "Australia",
+                flag: "🇦🇺",
+                firstNames: ["Oliver", "William", "Jack", "Noah", "Thomas", "James", "Lachlan", "Leo", "Charlie", "Ethan", "Charlotte", "Olivia", "Amelia", "Ava", "Isla", "Mia", "Chloe", "Emily", "Sophia", "Grace"],
+                lastNames: ["Smith", "Jones", "Williams", "Brown", "Wilson", "Taylor", "Johnson", "White", "Martin", "Anderson"],
+                streetFormats: ["{number} {street} {type}", "{number} {street} {type}"],
+                streetTypes: ["St", "Rd", "Ave", "Cres", "Dr", "Ln", "Way", "Pl"],
+                streets: ["Main", "High", "King", "Queen", "George", "Elizabeth", "Victoria", "Albert", "Park", "Beach"],
+                cities: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Canberra", "Newcastle", "Wollongong", "Logan City"],
+                states: ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "NT", "ACT"],
+                phoneFormat: "0{area} {exchange} {line}",
+                postalCodeFormat: "####"
+            },
+            DE: {
+                name: "Germany",
+                flag: "🇩🇪",
+                firstNames: ["Max", "Paul", "Leon", "Finn", "Jonas", "Luca", "Felix", "Liam", "Noah", "Elias", "Mia", "Emma", "Hannah", "Sofia", "Lina", "Emilia", "Mila", "Lea", "Ella", "Clara"],
+                lastNames: ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann"],
+                streetFormats: ["{street}{type} {number}", "{street}{type} {number}"],
+                streetTypes: ["straße", "weg", "allee", "platz", "gasse"],
+                streets: ["Haupt", "Bahnhof", "Markt", "Schiller", "Goethe", "Berliner", "Münchner", "Frankfurter", "Hamburger", "Kölner"],
+                cities: ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig"],
+                states: ["Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen", "Hamburg", "Hessen", "Mecklenburg-Vorpommern", "Niedersachsen", "Nordrhein-Westfalen"],
+                phoneFormat: "0{area} {exchange}{line}",
+                postalCodeFormat: "#####"
+            },
+            FR: {
+                name: "France",
+                flag: "🇫🇷",
+                firstNames: ["Gabriel", "Louis", "Raphaël", "Arthur", "Jules", "Adam", "Victor", "Lucas", "Hugo", "Léo", "Emma", "Jade", "Louise", "Alice", "Chloé", "Lina", "Rose", "Manon", "Léa", "Mia"],
+                lastNames: ["Martin", "Bernard", "Dubois", "Thomas", "Robert", "Richard", "Petit", "Durand", "Leroy", "Moreau"],
+                streetFormats: ["{number} {street} {type}", "{number}, {street} {type}"],
+                streetTypes: ["Rue", "Avenue", "Boulevard", "Place", "Impasse", "Allée"],
+                streets: ["de la Paix", "de la République", "de la Liberté", "de l'Église", "de la Gare", "de la Mairie", "de l'École", "du Marché", "du Moulin", "du Château"],
+                cities: ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Montpellier", "Strasbourg", "Bordeaux", "Lille"],
+                states: ["Île-de-France", "Provence-Alpes-Côte d'Azur", "Auvergne-Rhône-Alpes", "Hauts-de-France", "Nouvelle-Aquitaine", "Occitanie", "Pays de la Loire", "Grand Est", "Normandie", "Centre-Val de Loire"],
+                phoneFormat: "0{area} {exchange} {line}",
+                postalCodeFormat: "#####"
+            },
+            JP: {
+                name: "Japan",
+                flag: "🇯🇵",
+                firstNames: ["Hiroto", "Yuto", "Sota", "Yuki", "Haruto", "Ren", "Takumi", "Shota", "Sora", "Kaito", "Yui", "Hana", "Sakura", "Aoi", "Rin", "Yua", "Mei", "Miu", "Hina", "Koharu"],
+                lastNames: ["Sato", "Suzuki", "Takahashi", "Tanaka", "Watanabe", "Ito", "Yamamoto", "Nakamura", "Kobayashi", "Kato"],
+                streetFormats: ["{prefecture} {city} {ward} {number}-{number}", "{prefecture} {city} {ward} {number}-{number}"],
+                streetTypes: ["丁目", "番地"],
+                streets: ["中央", "北", "南", "東", "西", "港", "新宿", "渋谷", "品川", "目黒"],
+                cities: ["Tokyo", "Osaka", "Kyoto", "Yokohama", "Nagoya", "Sapporo", "Kobe", "Fukuoka", "Kawasaki", "Saitama"],
+                states: ["Hokkaido", "Aomori", "Iwate", "Miyagi", "Akita", "Yamagata", "Fukushima", "Ibaraki", "Tochigi", "Gunma"],
+                phoneFormat: "0{area}-{exchange}-{line}",
+                postalCodeFormat: "###-####"
+            },
+            CN: {
+                name: "China",
+                flag: "🇨🇳",
+                firstNames: ["伟", "芳", "娜", "秀英", "敏", "静", "丽", "强", "磊", "军", "洋", "勇", "艳", "杰", "娟", "涛", "明", "超", "秀兰", "霞"],
+                lastNames: ["李", "王", "张", "刘", "陈", "杨", "赵", "黄", "周", "吴"],
+                streetFormats: ["{province}{city}{district}{street}{number}号", "{province}{city}{district}{street}{number}号"],
+                streetTypes: ["路", "街", "大道", "巷", "弄"],
+                streets: ["中山", "人民", "解放", "建设", "新华", "友谊", "和平", "胜利", "光明", "幸福"],
+                cities: ["北京", "上海", "广州", "深圳", "成都", "重庆", "杭州", "武汉", "西安", "苏州"],
+                states: ["北京市", "上海市", "天津市", "重庆市", "河北省", "山西省", "辽宁省", "吉林省", "黑龙江省", "江苏省"],
+                phoneFormat: "1{area} {exchange} {line}",
+                postalCodeFormat: "######"
+            },
+            IN: {
+                name: "India",
+                flag: "🇮🇳",
+                firstNames: ["Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan", "Aadhya", "Ananya", "Diya", "Pari", "Anika", "Prisha", "Anvi", "Sara", "Myra", "Ishita"],
+                lastNames: ["Sharma", "Verma", "Gupta", "Patel", "Singh", "Kumar", "Yadav", "Jain", "Reddy", "Kumar"],
+                streetFormats: ["{number}, {street} {type}", "{number}, {street} {type}"],
+                streetTypes: ["Street", "Road", "Avenue", "Lane", "Nagar", "Colony"],
+                streets: ["Gandhi", "Nehru", "Tagore", "Shivaji", "Ashok", "Subhash", "Azad", "Tilak", "Patel", "Jawahar"],
+                cities: ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Ahmedabad", "Chennai", "Kolkata", "Surat", "Pune", "Jaipur"],
+                states: ["Maharashtra", "Delhi", "Karnataka", "Telangana", "Gujarat", "Tamil Nadu", "West Bengal", "Uttar Pradesh", "Rajasthan", "Madhya Pradesh"],
+                phoneFormat: "+91 {area} {exchange} {line}",
+                postalCodeFormat: "######"
+            },
+            BR: {
+                name: "Brazil",
+                flag: "🇧🇷",
+                firstNames: ["Miguel", "Arthur", "Heitor", "Davi", "Bernardo", "Lucas", "Gabriel", "Pedro", "Matheus", "Rafael", "Helena", "Alice", "Laura", "Valentina", "Giovanna", "Maria", "Heloísa", "Lorena", "Lívia", "Manuela"],
+                lastNames: ["Silva", "Santos", "Oliveira", "Souza", "Pereira", "Costa", "Rodrigues", "Almeida", "Carvalho", "Gomes"],
+                streetFormats: ["{street} {type}, {number}", "{street} {type}, {number}"],
+                streetTypes: ["Rua", "Avenida", "Travessa", "Alameda", "Praça"],
+                streets: ["das Flores", "Principal", "da Paz", "da Liberdade", "da República", "Brasil", "São Paulo", "Rio de Janeiro", "Minas Gerais", "Bahia"],
+                cities: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador", "Fortaleza", "Belo Horizonte", "Manaus", "Curitiba", "Recife", "Goiânia"],
+                states: ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA"],
+                phoneFormat: "({area}) {exchange}-{line}",
+                postalCodeFormat: "#####-###"
+            }
+        };
+
+        // Credit card data
+        const creditCardTypes = [
+            { type: "Visa", prefix: "4", length: 16 },
+            { type: "MasterCard", prefix: "5", length: 16 },
+            { type: "American Express", prefix: "3", length: 15 },
+            { type: "Discover", prefix: "6", length: 16 }
+        ];
+
+        // DOM elements
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const generateBtn = document.getElementById('generateBtn');
+        const countrySelect = document.getElementById('countrySelect');
+        const countSelect = document.getElementById('countSelect');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const profilesContainer = document.getElementById('profilesContainer');
+        const historyContainer = document.getElementById('historyContainer');
+        const emptyHistory = document.getElementById('emptyHistory');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const searchHistory = document.getElementById('searchHistory');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // Initialize
+        let history = JSON.parse(localStorage.getItem('fakeAddressHistory')) || [];
+        let isDarkMode = localStorage.getItem('darkMode') !== 'light';
+        
+        if (!isDarkMode) {
+            document.body.classList.add('light-mode');
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+
+        // Event listeners
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
         });
         
-        // Function to generate fake profiles
-        function generateProfiles() {
-            const country = document.getElementById('countrySelect').value;
-            const count = parseInt(document.getElementById('countSelect').value);
-            const container = document.getElementById('profilesContainer');
+        generateBtn.addEventListener('click', generateProfiles);
+        clearHistoryBtn.addEventListener('click', clearHistory);
+        searchHistory.addEventListener('input', filterHistory);
+
+        // Functions
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('light-mode');
             
-            // Clear previous results
-            container.innerHTML = '';
-            
-            // Generate profiles
-            for (let i = 0; i < count; i++) {
-                const profile = generateProfile(country);
-                displayProfile(profile, container);
-                saveToHistory(profile);
+            if (isDarkMode) {
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem('darkMode', 'dark');
+            } else {
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem('darkMode', 'light');
             }
         }
-        
-        // Function to generate a single profile
-        function generateProfile(countryCode) {
-            // Set locale if not random
-            if (countryCode !== 'random') {
-                faker.locale = countryCode;
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            tabBtns.forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('tab-active');
+                } else {
+                    btn.classList.remove('tab-active');
+                }
+            });
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            
+            // Load history if switching to history tab
+            if (tabName === 'history') {
+                loadHistory();
+            }
+        }
+
+        function generateProfiles() {
+            const countryCode = countrySelect.value;
+            const count = parseInt(countSelect.value);
+            const country = countryData[countryCode];
+            
+            // Show loading state
+            generateBtn.innerHTML = '<span class="loader mr-2"></span> Generating...';
+            generateBtn.disabled = true;
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                const profiles = [];
+                
+                for (let i = 0; i < count; i++) {
+                    const profile = generateProfile(countryCode, country);
+                    profiles.push(profile);
+                }
+                
+                // Add to history
+                history.unshift(...profiles);
+                localStorage.setItem('fakeAddressHistory', JSON.stringify(history));
+                
+                // Display profiles
+                displayProfiles(profiles);
+                
+                // Reset button
+                generateBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i> Generate';
+                generateBtn.disabled = false;
+                
+                // Show toast
+                showToast(`Generated ${count} fake profile${count > 1 ? 's' : ''} for ${country.name}`);
+            }, 800);
+        }
+
+        function generateProfile(countryCode, country) {
+            const gender = Math.random() > 0.5 ? 'male' : 'female';
+            const firstName = getRandomItem(country.firstNames);
+            const lastName = getRandomItem(country.lastNames);
+            const fullName = `${firstName} ${lastName}`;
+            
+            // Generate birth date (18-80 years old)
+            const minAge = 18;
+            const maxAge = 80;
+            const age = Math.floor(Math.random() * (maxAge - minAge + 1)) + minAge;
+            const birthYear = new Date().getFullYear() - age;
+            const birthMonth = Math.floor(Math.random() * 12) + 1;
+            const birthDay = Math.floor(Math.random() * 28) + 1;
+            const birthDate = `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`;
+            
+            // Generate SSN (format varies by country)
+            let ssn = '';
+            if (countryCode === 'US') {
+                ssn = `${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 90) + 10}-${Math.floor(Math.random() * 9000) + 1000}`;
+            } else if (countryCode === 'UK') {
+                ssn = `${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 900000) + 100000}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
             } else {
-                // If random, pick a random country from the list
-                const countries = ['en_US', 'en_CA', 'en_GB', 'en_AU', 'de_DE', 'fr_FR', 'es_ES', 'it_IT', 'ja_JP', 'ko_KR', 'zh_CN', 'ru_RU', 'pt_BR', 'es_MX', 'en_IN'];
-                faker.locale = countries[Math.floor(Math.random() * countries.length)];
+                ssn = `${Math.floor(Math.random() * 900000000) + 100000000}`;
             }
             
-            // Generate profile data
-            const profile = {
+            // Generate address
+            const streetNumber = Math.floor(Math.random() * 9999) + 1;
+            const street = getRandomItem(country.streets);
+            const streetType = getRandomItem(country.streetTypes);
+            const streetFormat = getRandomItem(country.streetFormats);
+            const fullStreet = streetFormat
+                .replace('{number}', streetNumber)
+                .replace('{street}', street)
+                .replace('{type}', streetType);
+            
+            const city = getRandomItem(country.cities);
+            const state = getRandomItem(country.states);
+            
+            // Generate postal code based on format
+            let postalCode = country.postalCodeFormat;
+            while (postalCode.includes('#')) {
+                postalCode = postalCode.replace('#', Math.floor(Math.random() * 10));
+            }
+            postalCode = postalCode.replace(/A/g, String.fromCharCode(65 + Math.floor(Math.random() * 26)));
+            
+            // Generate phone number
+            let phoneNumber = country.phoneFormat;
+            while (phoneNumber.includes('{area}')) {
+                phoneNumber = phoneNumber.replace('{area}', Math.floor(Math.random() * 900) + 100);
+            }
+            while (phoneNumber.includes('{exchange}')) {
+                phoneNumber = phoneNumber.replace('{exchange}', Math.floor(Math.random() * 900) + 100);
+            }
+            while (phoneNumber.includes('{line}')) {
+                phoneNumber = phoneNumber.replace('{line}', Math.floor(Math.random() * 9000) + 1000);
+            }
+            
+            // Generate lat/lon (roughly within country bounds)
+            let lat, lon;
+            switch (countryCode) {
+                case 'US':
+                    lat = (Math.random() * 25) + 25; // 25-50
+                    lon = (Math.random() * 50) - 125; // -125 to -75
+                    break;
+                case 'UK':
+                    lat = (Math.random() * 5) + 50; // 50-55
+                    lon = (Math.random() * 10) - 8; // -8 to 2
+                    break;
+                case 'CA':
+                    lat = (Math.random() * 30) + 45; // 45-75
+                    lon = (Math.random() * 60) - 140; // -140 to -80
+                    break;
+                case 'AU':
+                    lat = (Math.random() * 30) - 10; // -10 to 20
+                    lon = (Math.random() * 40) + 110; // 110-150
+                    break;
+                case 'DE':
+                    lat = (Math.random() * 8) + 47; // 47-55
+                    lon = (Math.random() * 10) + 5; // 5-15
+                    break;
+                case 'FR':
+                    lat = (Math.random() * 12) + 41; // 41-53
+                    lon = (Math.random() * 10) - 5; // -5 to 5
+                    break;
+                case 'JP':
+                    lat = (Math.random() * 10) + 30; // 30-40
+                    lon = (Math.random() * 20) + 130; // 130-150
+                    break;
+                case 'CN':
+                    lat = (Math.random() * 40) + 15; // 15-55
+                    lon = (Math.random() * 50) + 75; // 75-125
+                    break;
+                case 'IN':
+                    lat = (Math.random() * 20) + 8; // 8-28
+                    lon = (Math.random() * 20) + 70; // 70-90
+                    break;
+                case 'BR':
+                    lat = (Math.random() * 30) - 35; // -35 to -5
+                    lon = (Math.random() * 40) - 75; // -75 to -35
+                    break;
+                default:
+                    lat = (Math.random() * 180) - 90;
+                    lon = (Math.random() * 360) - 180;
+            }
+            
+            // Generate credit card
+            const cardType = getRandomItem(creditCardTypes);
+            let cardNumber = cardType.prefix;
+            for (let i = 1; i < cardType.length; i++) {
+                cardNumber += Math.floor(Math.random() * 10);
+            }
+            
+            // Apply Luhn algorithm to make it valid format
+            cardNumber = applyLuhn(cardNumber);
+            
+            const expMonth = Math.floor(Math.random() * 12) + 1;
+            const expYear = new Date().getFullYear() + Math.floor(Math.random() * 5) + 1;
+            const cvv = Math.floor(Math.random() * 900) + 100;
+            
+            return {
                 id: Date.now() + Math.random(),
+                timestamp: new Date().toISOString(),
+                country: countryCode,
+                countryName: country.name,
+                flag: country.flag,
                 person: {
-                    fullName: faker.name.findName(),
-                    gender: faker.name.gender(),
-                    birthday: faker.date.past(50, new Date(2000, 0, 1)).toLocaleDateString(),
-                    ssn: generateSSN()
+                    fullName,
+                    gender,
+                    birthDate,
+                    ssn
                 },
                 address: {
-                    street: faker.address.streetAddress(),
-                    city: faker.address.city(),
-                    state: faker.address.state(),
-                    zipCode: faker.address.zipCode(),
-                    phoneNumber: faker.phone.phoneNumber(),
-                    country: faker.address.country(),
-                    latitude: faker.address.latitude(),
-                    longitude: faker.address.longitude()
+                    street: fullStreet,
+                    city,
+                    state,
+                    postalCode,
+                    phoneNumber,
+                    lat: lat.toFixed(6),
+                    lon: lon.toFixed(6)
                 },
                 finance: {
-                    cardBrand: faker.random.arrayElement(['Visa', 'MasterCard', 'American Express', 'Discover']),
-                    cardNumber: generateCardNumber(),
-                    expirationDate: generateExpirationDate(),
-                    cvv: faker.finance.creditCardCVV()
-                },
-                timestamp: new Date().toISOString()
+                    cardType: cardType.type,
+                    cardNumber,
+                    expDate: `${String(expMonth).padStart(2, '0')}/${expYear.toString().slice(-2)}`,
+                    cvv
+                }
             };
-            
-            return profile;
         }
-        
-        // Function to generate a fake SSN
-        function generateSSN() {
-            let ssn = '';
-            for (let i = 0; i < 9; i++) {
-                ssn += Math.floor(Math.random() * 10);
-                if (i === 2 || i === 4) ssn += '-';
-            }
-            return ssn;
-        }
-        
-        // Function to generate a fake credit card number
-        function generateCardNumber() {
-            let cardNumber = '';
-            const length = Math.floor(Math.random() * 3) + 16; // 16-18 digits
+
+        function applyLuhn(cardNumber) {
+            // Convert to array of digits
+            const digits = cardNumber.split('').map(Number);
             
-            for (let i = 0; i < length; i++) {
-                cardNumber += Math.floor(Math.random() * 10);
-                if (i > 0 && i % 4 === 3 && i < length - 1) cardNumber += ' ';
+            // Double every second digit from right to left
+            for (let i = digits.length - 2; i >= 0; i -= 2) {
+                digits[i] *= 2;
+                if (digits[i] > 9) {
+                    digits[i] -= 9;
+                }
             }
             
-            return cardNumber;
-        }
-        
-        // Function to generate a fake expiration date
-        function generateExpirationDate() {
-            const month = Math.floor(Math.random() * 12) + 1;
-            const year = new Date().getFullYear() + Math.floor(Math.random() * 5) + 1;
-            return `${month.toString().padStart(2, '0')}/${year.toString().slice(-2)}`;
-        }
-        
-        // Function to display a profile
-        function displayProfile(profile, container) {
-            const profileCard = document.createElement('div');
-            profileCard.className = 'profile-card bg-white rounded-lg shadow-md overflow-hidden fade-in';
+            // Calculate sum
+            const sum = digits.reduce((acc, digit) => acc + digit, 0);
             
-            profileCard.innerHTML = `
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-semibold text-gray-800">${profile.person.fullName}</h3>
-                        <button class="download-btn text-indigo-600 hover:text-indigo-800" data-profile='${JSON.stringify(profile)}'>
+            // Calculate check digit
+            const checkDigit = (10 - (sum % 10)) % 10;
+            
+            // Replace last digit with check digit
+            return cardNumber.slice(0, -1) + checkDigit;
+        }
+
+        function displayProfiles(profiles) {
+            profilesContainer.innerHTML = '';
+            
+            profiles.forEach(profile => {
+                const profileCard = createProfileCard(profile);
+                profilesContainer.appendChild(profileCard);
+            });
+            
+            resultsContainer.classList.remove('hidden');
+        }
+
+        function createProfileCard(profile) {
+            const card = document.createElement('div');
+            card.className = 'card rounded-xl p-6';
+            
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold">${profile.flag} ${profile.person.fullName}</h3>
+                        <p class="text-gray-400">${profile.countryName}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="copy-btn p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition" data-id="${profile.id}">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="download-btn p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition" data-id="${profile.id}">
                             <i class="fas fa-download"></i>
                         </button>
                     </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-gray-400 text-sm">Personal</p>
+                        <p>Gender: ${profile.person.gender.charAt(0).toUpperCase() + profile.person.gender.slice(1)}</p>
+                        <p>Birthday: ${profile.person.birthDate}</p>
+                        <p>SSN: ${profile.person.ssn}</p>
+                    </div>
                     
-                    <div class="space-y-4">
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Personal Information</h4>
-                            <div class="bg-gray-50 rounded-md p-3">
-                                <p class="text-sm"><span class="font-medium">Gender:</span> ${profile.person.gender}</p>
-                                <p class="text-sm"><span class="font-medium">Birthday:</span> ${profile.person.birthday}</p>
-                                <p class="text-sm"><span class="font-medium">SSN:</span> ${profile.person.ssn}</p>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Address</h4>
-                            <div class="bg-gray-50 rounded-md p-3">
-                                <p class="text-sm">${profile.address.street}</p>
-                                <p class="text-sm">${profile.address.city}, ${profile.address.state} ${profile.address.zipCode}</p>
-                                <p class="text-sm">${profile.address.country}</p>
-                                <p class="text-sm"><span class="font-medium">Phone:</span> ${profile.address.phoneNumber}</p>
-                                <p class="text-sm"><span class="font-medium">Coordinates:</span> ${profile.address.latitude}, ${profile.address.longitude}</p>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Financial Information</h4>
-                            <div class="bg-gray-50 rounded-md p-3">
-                                <p class="text-sm"><span class="font-medium">Card:</span> ${profile.finance.cardBrand}</p>
-                                <p class="text-sm">${profile.finance.cardNumber}</p>
-                                <p class="text-sm"><span class="font-medium">Expires:</span> ${profile.finance.expirationDate} | <span class="font-medium">CVV:</span> ${profile.finance.cvv}</p>
-                            </div>
-                        </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Address</p>
+                        <p>${profile.address.street}</p>
+                        <p>${profile.address.city}, ${profile.address.state} ${profile.address.postalCode}</p>
+                        <p>Phone: ${profile.address.phoneNumber}</p>
+                        <p>Lat/Lon: ${profile.address.lat}, ${profile.address.lon}</p>
+                    </div>
+                    
+                    <div>
+                        <p class="text-gray-400 text-sm">Finance</p>
+                        <p>${profile.finance.cardType}: ${formatCardNumber(profile.finance.cardNumber)}</p>
+                        <p>Expires: ${profile.finance.expDate} | CVV: ${profile.finance.cvv}</p>
                     </div>
                 </div>
             `;
             
-            container.appendChild(profileCard);
+            // Add event listeners
+            card.querySelector('.copy-btn').addEventListener('click', () => copyProfile(profile));
+            card.querySelector('.download-btn').addEventListener('click', () => downloadProfile(profile));
             
-            // Add download functionality
-            profileCard.querySelector('.download-btn').addEventListener('click', function() {
-                downloadProfile(profile);
-            });
+            return card;
         }
-        
-        // Function to download a profile as a text file
+
+        function formatCardNumber(cardNumber) {
+            // Format with spaces every 4 digits
+            return cardNumber.replace(/(.{4})/g, '$1 ').trim();
+        }
+
+        function copyProfile(profile) {
+            const profileText = profileToText(profile);
+            navigator.clipboard.writeText(profileText)
+                .then(() => showToast('Profile copied to clipboard!'))
+                .catch(() => showToast('Failed to copy profile'));
+        }
+
         function downloadProfile(profile) {
-            const content = `
-FAKE IDENTITY PROFILE
-====================
-
-Personal Information:
-- Full Name: ${profile.person.fullName}
-- Gender: ${profile.person.gender}
-- Birthday: ${profile.person.birthday}
-- SSN: ${profile.person.ssn}
-
-Address:
-- Street: ${profile.address.street}
-- City: ${profile.address.city}
-- State: ${profile.address.state}
-- Zip Code: ${profile.address.zipCode}
-- Country: ${profile.address.country}
-- Phone: ${profile.address.phoneNumber}
-- Coordinates: ${profile.address.latitude}, ${profile.address.longitude}
-
-Financial Information:
-- Card Brand: ${profile.finance.cardBrand}
-- Card Number: ${profile.finance.cardNumber}
-- Expiration Date: ${profile.finance.expirationDate}
-- CVV: ${profile.finance.cvv}
-
-Generated by Fetus
-            `;
-            
-            const blob = new Blob([content], { type: 'text/plain' });
+            const profileText = profileToText(profile);
+            const blob = new Blob([profileText], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -383,82 +785,91 @@ Generated by Fetus
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        }
-        
-        // Function to save a profile to history
-        function saveToHistory(profile) {
-            let history = JSON.parse(localStorage.getItem('fakeProfileHistory') || '[]');
-            history.unshift(profile);
             
-            // Limit history to 50 items
-            if (history.length > 50) {
-                history = history.slice(0, 50);
-            }
-            
-            localStorage.setItem('fakeProfileHistory', JSON.stringify(history));
+            showToast('Profile downloaded!');
         }
-        
-        // Function to load and display history
+
+        function profileToText(profile) {
+            return `
+FAKE PROFILE - ${profile.countryName}
+Generated by Fetus
+
+PERSONAL INFORMATION
+Full Name: ${profile.person.fullName}
+Gender: ${profile.person.gender.charAt(0).toUpperCase() + profile.person.gender.slice(1)}
+Birthday: ${profile.person.birthDate}
+SSN: ${profile.person.ssn}
+
+ADDRESS
+${profile.address.street}
+${profile.address.city}, ${profile.address.state} ${profile.address.postalCode}
+${profile.countryName}
+Phone: ${profile.address.phoneNumber}
+Coordinates: ${profile.address.lat}, ${profile.address.lon}
+
+FINANCIAL INFORMATION
+Card Type: ${profile.finance.cardType}
+Card Number: ${profile.finance.cardNumber}
+Expiration Date: ${profile.finance.expDate}
+CVV: ${profile.finance.cvv}
+
+---
+This data is 100% fake and for testing or educational use only.
+It must not be used for illegal purposes.
+Generated by Fetus
+            `.trim();
+        }
+
         function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('fakeProfileHistory') || '[]');
-            const container = document.getElementById('historyContainer');
-            const emptyMessage = document.getElementById('emptyHistory');
-            
-            container.innerHTML = '';
+            historyContainer.innerHTML = '';
             
             if (history.length === 0) {
-                emptyMessage.style.display = 'block';
+                emptyHistory.classList.remove('hidden');
                 return;
             }
             
-            emptyMessage.style.display = 'none';
+            emptyHistory.classList.add('hidden');
             
             history.forEach(profile => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'bg-gray-50 rounded-lg p-4 flex justify-between items-center hover:bg-gray-100 transition';
-                
-                const date = new Date(profile.timestamp).toLocaleString();
-                
-                historyItem.innerHTML = `
-                    <div>
-                        <h3 class="font-medium text-gray-800">${profile.person.fullName}</h3>
-                        <p class="text-sm text-gray-600">${profile.address.city}, ${profile.address.country}</p>
-                        <p class="text-xs text-gray-500">${date}</p>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button class="view-btn px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition" data-profile='${JSON.stringify(profile)}'>
-                            <i class="fas fa-eye mr-1"></i> View
-                        </button>
-                        <button class="download-btn px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition" data-profile='${JSON.stringify(profile)}'>
-                            <i class="fas fa-download mr-1"></i> Download
-                        </button>
-                    </div>
-                `;
-                
-                container.appendChild(historyItem);
-                
-                // Add view functionality
-                historyItem.querySelector('.view-btn').addEventListener('click', function() {
-                    // Switch to generator tab and display the profile
-                    document.getElementById('generatorTab').click();
-                    const profilesContainer = document.getElementById('profilesContainer');
-                    profilesContainer.innerHTML = '';
-                    displayProfile(profile, profilesContainer);
-                });
-                
-                // Add download functionality
-                historyItem.querySelector('.download-btn').addEventListener('click', function() {
-                    downloadProfile(profile);
-                });
+                const profileCard = createProfileCard(profile);
+                historyContainer.appendChild(profileCard);
             });
         }
-        
-        // Function to clear history
+
         function clearHistory() {
             if (confirm('Are you sure you want to clear all history?')) {
-                localStorage.removeItem('fakeProfileHistory');
+                history = [];
+                localStorage.removeItem('fakeAddressHistory');
                 loadHistory();
+                showToast('History cleared!');
             }
+        }
+
+        function filterHistory() {
+            const searchTerm = searchHistory.value.toLowerCase();
+            const profileCards = historyContainer.querySelectorAll('.card');
+            
+            profileCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
         }
     </script>
 </body>
